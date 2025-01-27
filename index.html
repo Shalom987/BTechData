@@ -3,48 +3,96 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Google Sheets Data Submission</title>
+  <title>Transaction System</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    .container {
+      width: 300px;
+      margin: 0 auto;
+    }
+    .input-box {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 8px;
+      margin: 5px 0;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    .alert {
+      color: red;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
 </head>
 <body>
-  <h1>Submit Data to Google Sheet</h1>
-  <form id="dataForm">
-    <label for="name">Name:</label><br>
-    <input type="text" id="name" name="name" required><br><br>
 
-    <label for="email">Email:</label><br>
-    <input type="email" id="email" name="email" required><br><br>
+  <div class="container">
+    <h2>Deposit/Withdraw</h2>
+    <div class="input-box">
+      <label for="user">User</label>
+      <input type="text" id="user" placeholder="Enter your username" required>
+    </div>
+    
+    <div>
+      <label for="transactionType">Transaction Type</label>
+      <select id="transactionType">
+        <option value="Deposit">Deposit</option>
+        <option value="Withdraw">Withdraw</option>
+      </select>
+    </div></br>
 
-    <label for="phone">Phone:</label><br>
-    <input type="text" id="phone" name="phone" required><br><br>
+    <div class="input-box">
+      <label for="amount">Amount</label>
+      <input type="number" id="amount" required>
+    </div>
 
-    <button type="submit">Submit</button>
-  </form>
+    <button onclick="submitTransaction()">Balance</button>
 
-  <p id="responseMessage"></p>
+    <div id="result"></div>
+  </div>
 
   <script>
-    const scriptURL = "https://script.google.com/macros/s/AKfycby93B3gPFpkIGyGEGO3UX8pIjluLttcRrD-b2y2iS5je5Ldw7p4baYflJ-sv-CcoyQouA/exec"; // Replace with your Web App URL
+    function submitTransaction() {
+      const user = document.getElementById("user").value;
+      const type = document.getElementById("transactionType").value;
+      const amount = parseFloat(document.getElementById("amount").value);
 
-    document.getElementById('dataForm').addEventListener('submit', (e) => {
-      e.preventDefault(); // Prevent form submission
+      if (!user || !amount || amount <= 0) {
+        document.getElementById("result").innerHTML = "<p class='alert'>Please enter a valid username and amount.</p>";
+        return;
+      }
 
-      const formData = new FormData(e.target); // Collect form data
-      const responseMessage = document.getElementById('responseMessage');
+      google.script.run.withSuccessHandler(handleResponse).recordTransaction(user, type, amount);
+    }
 
-      fetch(scriptURL, {
-        method: 'POST',
-        body: formData
-      })
-        .then(response => response.text())
-        .then(data => {
-          responseMessage.textContent = data; // Display success message
-          e.target.reset(); // Clear the form
-        })
-        .catch(error => {
-          console.error('Error:', error);
-          responseMessage.textContent = "An error occurred. Please try again.";
-        });
-    });
+    function handleResponse(response) {
+      if (response.error) {
+        document.getElementById("result").innerHTML = `<p class='alert'>${response.error}</p>`;
+      } else {
+        document.getElementById("result").innerHTML = `<p>Transaction successful! New Balance: ${response.newBalance}</p>`;
+      }
+    }
   </script>
+  
 </body>
 </html>
